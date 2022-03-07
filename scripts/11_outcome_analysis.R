@@ -107,7 +107,7 @@ ggplot(collected, aes(x = Gleason_grade_group, y = mPGA)) + xlab("Gleason grade 
 
 if(output_report) {
   # Save in a mega pdf because there are lots of comparison
-  pdf(paste0("results/11_outcome_analysis/",out_var,
+  pdf(paste0("results/9_outcome_analysis/",out_var,
              "_timelimit=",cap_time,"_thresholdtype=",thresh_mode,"_outcome_analysis_report.pdf"), 
       width = 7, height = 7)
 }
@@ -499,7 +499,7 @@ if(thresh_mode=="upper_tert") {
     ggtitle(paste0("Spearman values for IMRT patients used for outcome analysis\n(upper tertile split = ",
                    signif(up_tert_threshold, digits = 3),")")) + theme_cowplot() + 
     theme(plot.title = element_text(hjust = 0.5))
-  ggsave("results/11_outcome_analysis/Spearman_distribution_tertile_split.png", width = 7.5, height = 7.5)
+  ggsave("results/9_outcome_analysis/Spearman_distribution_tertile_split.png", width = 7.5, height = 7.5)
   
 }
 
@@ -588,7 +588,7 @@ res.cox = coxph(as.formula(paste("Surv(",out_tim,", ",out_var,")~", paste0(covar
 
 # Use survminer to plot the results
 ggforest(res.cox)
-ggsave(paste0("results/11_outcome_analysis/",out_var,
+ggsave(paste0("results/9_outcome_analysis/",out_var,
               "_timelimit=",cap_time,
               "_thresholdtype=",thresh_mode,"_outcome_analysis_Cox_proportional_hazards_model_continuous.pdf"), 
        width = plot_width, height = 7)
@@ -645,7 +645,7 @@ res.cox = coxph(as.formula(paste0("Surv(",out_tim,", ",out_var,")~", paste0(cova
 
 # Use survminer to plot the results
 ggforest(res.cox)
-ggsave(paste0("results/11_outcome_analysis/",
+ggsave(paste0("results/9_outcome_analysis/",
               out_var,"_timelimit=",cap_time,
               "_thresholdtype=",thresh_mode,"_outcome_analysis_Cox_proportional_hazards_model_categorical.pdf"), 
        width = plot_width, height = 7)

@@ -9,18 +9,18 @@ library(ComplexHeatmap)
 library(circlize)
 options(scipen = 999)
 
-# Where is the input data?
-davros_misc = "~/remotes/medicc_trees/"
-davros_lp   = "~/remotes/forecast_low_pass/"
+# Roots for data input and output
+medicc_root     = "~/remotes/misc/"
+pipeline_root   = "~/remotes/forecast_low_pass/"
 
 # Get patient folders
-patients = list.files(paste0(davros_lp,"data"))
+patients = list.files(paste0(pipeline_root,"data"))
 patients = patients[!patients %in% "README"]
 
 # Loop them
 trees = lapply(patients, function(patient) {
   
-  tree = try(read.tree(paste0(davros_misc,"forecast/",patient,"_regions_final_tree.new")))
+  tree = try(read.tree(paste0(medicc_root,"forecast/",patient,"_regions_final_tree.new")))
   
   return(tree)
   
@@ -29,7 +29,7 @@ trees = lapply(patients, function(patient) {
 # Loop them - I edited MEDICC2 to output this
 mrcas = lapply(patients, function(patient) {
   
-  mrca = try(read.table(paste0(davros_misc,"forecast/",patient,"_regions_mrca.txt"), 
+  mrca = try(read.table(paste0(medicc_root,"forecast/",patient,"_regions_mrca.txt"), 
                         stringsAsFactors = F, header = F)$V1)
   
   if(class(mrca)=="try-error") {mrca = NA}
@@ -99,7 +99,7 @@ event_pairs = lapply(trees, function(tree) {
 # Loop them
 summary = lapply(patients, function(patient) {
   
-  summary = try(read.table(paste0(davros_misc,"forecast/",patient,"_regions_summary.tsv"), 
+  summary = try(read.table(paste0(medicc_root,"forecast/",patient,"_regions_summary.tsv"), 
                            stringsAsFactors = F, header = F, sep = "\t", fill = T))
   
   if(class(summary)=="try-error") {summary = NA}
@@ -111,7 +111,7 @@ summary = lapply(patients, function(patient) {
 # Loop them
 region_status = lapply(patients, function(patient) {
   
-  cnas = try(read.table(paste0(davros_misc,"forecast/",patient,"_regions_final_cn_profiles.tsv"), 
+  cnas = try(read.table(paste0(medicc_root,"forecast/",patient,"_regions_final_cn_profiles.tsv"), 
                         stringsAsFactors = F, header = T, sep = "\t", fill = T))
   
   if(class(cnas)=="try-error") {cnas = NA}
