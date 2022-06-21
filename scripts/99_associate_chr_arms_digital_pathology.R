@@ -22,7 +22,7 @@ per_sample_metrics = read.table("results/2_metrics/metric_assessment_table.txt",
 
 # Remove normal samples and those without CNAs
 per_sample_metrics = per_sample_metrics[!(per_sample_metrics$PGA < min_pga | per_sample_metrics$Assessment=="Failed" 
-                                          | grepl("_N[0-9]{1,2}_", per_sample_metrics$Sample) | per_sample_metrics$Sample=="IM1017_B2_DW1"),]
+                                          | grepl("_N[0-9]{1,2}_", per_sample_metrics$Sample) | per_sample_metrics$Sample==""),]
 
 # Read in gleason
 gleason = read.csv("refs/GleasonSummaryClean.csv", 
@@ -345,12 +345,32 @@ res = merge(res, tsgog_score, by = "Arm")
 # Add directionality too
 res$pa_signif_direction = ifelse(res$pa_signif, yes = paste0(res$pa_signif,"_",res$m>0), res$pa_signif)
 
+# Remove NAs
+res_omit = na.omit(res)
+
+# Let's do some t.tests
+res_gain = res_omit[res_omit$Type == "gain" & res_omit$pa_signif_direction %in% c("FALSE", "TRUE_TRUE"),]
+res_loss = res_omit[res_omit$Type == "loss" & res_omit$pa_signif_direction %in% c("FALSE", "TRUE_TRUE"),]
+
+# Positive v none pvalues
+p1 = signif(t.test(Charm_TSG_OG_score ~ pa_signif_direction, res_gain, alternative = "less")$p.value, digits = 3)
+p2 = signif(t.test(Charm_TSG_OG_score ~ pa_signif_direction, res_loss, alternative = "greater")$p.value, digits = 3)
+
+# Make as dataframe
+ps      = data.frame(pa_signif_direction = c("TRUE_FALSE"), 
+                     Charm_TSG_OG_score = c(6,4.5), Type = c("gain", "loss"))
+sg      = data.frame(x = c(1,1,3,1,1,3), y = c(5.5,5.5,5.5,4,4,4), 
+                     xend = c(3,1,3,3,1,3), yend = c(5.5,5.3,5.3,4,3.8,3.8),
+                     Type = c(rep("gain", times = 3), rep("loss", times = 3)))
+
 # Associate to TSG-OG score
-p = ggplot(na.omit(res), aes(x = pa_signif_direction, y = Charm_TSG_OG_score)) + 
-  geom_violin(width=0.5) + geom_boxplot(width=0.1) +
+p = ggplot(res_omit, aes(x = pa_signif_direction, y = Charm_TSG_OG_score)) + 
+  geom_violin(width=0.5) + geom_boxplot(width=0.1, outlier.shape = NA) +
   geom_jitter(width = 0.2) + 
   ylim(-5,6) +
   facet_grid(cols = vars(Type)) + xlab("Significant Association with Gleason") + ylab("TSG-OG score") + 
+  geom_text(data = ps, label = paste0("p=",c(p1, p2))) +
+  geom_segment(data = sg, aes(x = x, xend = xend, y = y, yend = yend)) +
   scale_x_discrete(labels=c("None", "Negative", "Positive"))
 ggsave(p, filename = "results/7_collect_metrics/Chromosome_Arm_Change_TSG_OG_scores.png", height = 5, width = 5)
 

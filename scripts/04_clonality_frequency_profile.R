@@ -46,7 +46,7 @@ patient_ploidies$Ploidy = round(patient_ploidies$PsiT)
 per_sample_mets = read.table("results/2_metrics/metric_assessment_table.txt", header = T, stringsAsFactors = F)
 
 # Make a blacklist of samples
-normal_samples = per_sample_mets$PGA < min_pga | per_sample_mets$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", per_sample_mets$Sample) | per_sample_mets$Sample=="IM1017_B2_DW1"
+normal_samples = per_sample_mets$PGA < min_pga | per_sample_mets$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", per_sample_mets$Sample) | per_sample_mets$Sample==""
 normal_samples = per_sample_mets$Sample[normal_samples]
 
 # Get indices of the tumour samples

@@ -20,7 +20,7 @@ per_sample_metrics = read.table("results/2_metrics/metric_assessment_table.txt",
 
 # Remove low CNA samples and normals
 per_sample_metrics = per_sample_metrics[!(per_sample_metrics$PGA < min_pga | per_sample_metrics$Assessment=="Failed" 
-                                          | grepl("_N[0-9]{1,2}_", per_sample_metrics$Sample) | per_sample_metrics$Sample=="IM1017_B2_DW1"),]
+                                          | grepl("_N[0-9]{1,2}_", per_sample_metrics$Sample) | per_sample_metrics$Sample==""),]
 
 # Read in the mutation data
 per_sample_mutation = read.table(paste0(targeted_repo,"results/mutation_calling/Per_sample_gene_mutation_status.txt",)

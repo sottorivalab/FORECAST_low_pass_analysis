@@ -30,13 +30,13 @@ insuff_sampl = rbind(insuff_sampl, exclude_sm)
 metrics    = read.table("results/2_metrics/metric_assessment_table.txt", header = T, stringsAsFactors = F)
 
 # Pre-filtering count
-pre_metrics = metrics[!(metrics$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", metrics$Sample) | metrics$Sample=="IM1017_B2_DW1"),]
+pre_metrics = metrics[!(metrics$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", metrics$Sample) | metrics$Sample==""),]
 pre_metrics = ddply(pre_metrics, .(Patient), 
                     summarize, 
                     Prefilter_samples = length(PGA))
 
 # Remove bad samples
-metrics = metrics[!(metrics$PGA < min_pga | metrics$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", metrics$Sample) | metrics$Sample=="IM1017_B2_DW1"),]
+metrics = metrics[!(metrics$PGA < min_pga | metrics$Assessment=="Failed" | grepl("_N[0-9]{1,2}_", metrics$Sample) | metrics$Sample==""),]
 
 # Summarise
 pp_metrics = ddply(metrics, .(Patient), 
