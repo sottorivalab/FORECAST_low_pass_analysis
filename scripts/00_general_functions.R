@@ -1,4 +1,4 @@
-# General functions useful for analysis in this repo
+# General functions useful for analysis in this repository
 
 # Range function for consensus ploidy analysis
 range01 = function(x){(x-min(x))/(max(x)-min(x))}
