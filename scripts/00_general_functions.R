@@ -6,6 +6,15 @@ range01 = function(x){(x-min(x))/(max(x)-min(x))}
 # Remove zero function
 removeZero = function(x) {x[x!=0]}
 
+# Scale so 90% is between 0 and 1
+scaleQuant = function(x, percentage = 90) {
+  
+  top_bottom = (1 - (percentage/100)) / 2
+  
+  (x - quantile(x, probs = top_bottom)) / (quantile(x, probs = 1 - top_bottom) - quantile(x, probs = top_bottom))
+  
+}
+
 # Get tertiles
 tertile = function(x) {quantile(x, probs = c(1/3, 2/3))}
 
