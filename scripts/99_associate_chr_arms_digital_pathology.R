@@ -71,7 +71,7 @@ gleason$Cont_Gleason = apply(gleason, 1, function(i) {
 })
 
 # Output the product
-write.csv(gleason, "results/7_collect_metrics/Gleason_per_sample_digital_pathology.csv", quote = F, row.names = F)
+write.csv(gleason, "results/8_collect_metrics/Gleason_per_sample_digital_pathology.csv", quote = F, row.names = F)
 
 # Subset only for samples with CNAs
 call_files = call_files[gsub("_cna_ploidy_search_calls.txt", "", basename(call_files)) %in% per_sample_metrics$Sample]
@@ -319,7 +319,7 @@ p = ggplot(plot_df, aes(x = Arm, y = -1*log(p.adjust.x, base = 10))) + geom_bar(
   xlab("") + geom_hline(yintercept = c(log(0.05, base = 10), -1*log(0.05, base = 10)), lty = "dotted") +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(p, filename = "results/7_collect_metrics/Association_chromosome_arms_gleason_difference.png", height = 5, width = 8)
+ggsave(p, filename = "results/8_collect_metrics/Association_chromosome_arms_gleason_difference.png", height = 5, width = 8)
 
 # Volcano plot
 p = ggplot(res, aes(x = m, y = -1 * log(p.adjust, base = 10), col = Type, 
@@ -332,7 +332,7 @@ p = ggplot(res, aes(x = m, y = -1 * log(p.adjust, base = 10), col = Type,
   scale_color_manual(values=c("loss"="#3c73a8","gain"="#ec2d01")) + 
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(p, filename = "results/7_collect_metrics/Volcano_plot_arms_gleason_difference.png", height = 3, width = 4)
+ggsave(p, filename = "results/8_collect_metrics/Volcano_plot_arms_gleason_difference.png", height = 3, width = 4)
 
 # Read in the arm data
 tsgog_score = read.csv("refs/Davoli_2013_Cell_TSG-OG_scores.csv", stringsAsFactors = F)
@@ -372,7 +372,7 @@ p = ggplot(res_omit, aes(x = pa_signif_direction, y = Charm_TSG_OG_score)) +
   geom_text(data = ps, label = paste0("p=",c(p1, p2))) +
   geom_segment(data = sg, aes(x = x, xend = xend, y = y, yend = yend)) +
   scale_x_discrete(labels=c("None", "Negative", "Positive"))
-ggsave(p, filename = "results/7_collect_metrics/Chromosome_Arm_Change_TSG_OG_scores.png", height = 5, width = 5)
+ggsave(p, filename = "results/8_collect_metrics/Chromosome_Arm_Change_TSG_OG_scores.png", height = 5, width = 5)
 
 #################################################################################################################
 
@@ -475,7 +475,7 @@ p = ggplot(res, aes(x = m, y = -1 * log(p.adjust, base = 10), col = Type,
   scale_color_manual(values=c("loss"="#3c73a8","gain"="#ec2d01")) + 
   ggtitle("Per arm change in TI Morisita") +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave(p, filename = "results/7_collect_metrics/Volcano_plot_arms_tumour_immune_morisita_difference.png", height = 3, width = 4)
+ggsave(p, filename = "results/8_collect_metrics/Volcano_plot_arms_tumour_immune_morisita_difference.png", height = 3, width = 4)
 
 # Show the chr6p result
 arm = "chr6p"
@@ -493,4 +493,33 @@ plt = ggplot(df_sub, aes_string(x = arm, y = "Morisita")) + ylab("Tumour-Immune 
   scale_y_continuous(breaks=c(0,0.5,1), limits = c(0,1.2)) +
   geom_boxplot(width=0.1) + scale_x_discrete(labels=c("Baseline", "Loss")) + xlab("Chromosome 6p")
 
-ggsave(plt, filename = "results/7_collect_metrics/TI_Morisita_chr6_association.png", height = 3, width = 4)
+ggsave(plt, filename = "results/8_collect_metrics/TI_Morisita_chr6_association.png", height = 3, width = 4)
+
+#################################################################################################################
+
+# Show immune infiltration per chromosome 6p status
+cell_class = read.csv("CellClassificationSummary_Regions.csv",
+                      stringsAsFactors = F)
+
+# Convert sample naming
+cell_class$Sample = convertPathSampleName(cell_class$X)
+
+# Merge
+calls_cell_class = merge(gain_loss_cn_arms_timorisita, cell_class, by = "Sample")
+
+calls_cell_class$chr6p_loss_patient = calls_cell_class$Patient %in% unique(calls_cell_class$Patient[calls_cell_class$chr6p == "loss"])
+
+lm = lmer(as.formula(paste0("Immune.. ~ chr6p + (1 | Patient)")), REML = TRUE, data = calls_cell_class[calls_cell_class$chr6p!="gain",])
+
+p = signif(summary(lm)$coefficients[2,5], digits = 3)
+m = summary(lm)$coefficient[2,"Estimate"]
+
+plt = ggplot(calls_cell_class, aes(x = chr6p, y = Immune..)) + geom_boxplot() + 
+  ylab("Immune %") + ylim(0,75) +
+  geom_segment(aes(x = 1, y = 60, xend = 2, yend = 60)) +
+  geom_segment(aes(x = 1, y = 60 - 2, xend = 1, yend = 60)) +
+  geom_segment(aes(x = 2, y = 60 - 2, xend = 2, yend = 60)) +
+  annotate("text", label = paste0("p=",p), x = 1.5, y = 60 + 5, 
+           size = 3) +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave(plt, filename = "results/8_collect_metrics/Immune_infiltration_chr6_loss.png", height = 3, width = 5)

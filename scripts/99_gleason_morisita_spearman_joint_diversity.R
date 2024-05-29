@@ -11,7 +11,7 @@ out_tim = "Recurrence_Months"
 out_var = "Recurrence"
 
 # Read in the genomic metrics
-patient_mets = read.table("results/7_collect_metrics/FORECAST_genomic_metrics.txt", sep = "\t", header = T, stringsAsFactors = F)
+patient_mets = read.table("results/8_collect_metrics/FORECAST_genomic_metrics.txt", sep = "\t", header = T, stringsAsFactors = F)
 
 # Get the gleason morisita
 gleason_morisita = read.csv("refs/GleasonMorisita_Patients.csv", header = F, stringsAsFactors = F)
@@ -36,7 +36,7 @@ ggplot(patient_mets[patient_mets$Gleason_Morisita!=0,], aes(x = mPGA, y = Gleaso
    annotate(geom="text", x=0.4, y=0.2, label=paste0("p=",format(p_value, scientific = FALSE)), size = 5) +
    ylab("Gleason Morisita") +
    geom_point() + geom_smooth(method = "lm", col = "#0165fc", se = T)
-ggsave("results/7_collect_metrics/Gleason_Morisita_mPGA.png", height = 3, width = 4)
+ggsave("results/8_collect_metrics/Gleason_Morisita_mPGA.png", height = 3, width = 4)
 
 # Linear model again for Spearman and GM this time
 lm = summary(lm(Gleason_Morisita ~ Spearman, patient_mets[patient_mets$Gleason_Morisita!=0,]))
@@ -49,7 +49,7 @@ ggplot(patient_mets[patient_mets$Gleason_Morisita!=0,], aes(x = Spearman, y = Gl
    annotate(geom="text", x=0.4, y=0.5, label=paste0("p=",format(p_value, scientific = FALSE)), size = 5) +
    ylab("Gleason Morisita") +
    geom_point() + geom_smooth(method = "lm", col = "#0165fc", se = T)
-ggsave("results/7_collect_metrics/Gleason_Morisita_Spearman.png", height = 3, width = 4)
+ggsave("results/8_collect_metrics/Gleason_Morisita_Spearman.png", height = 3, width = 4)
 
 # Read in the outcome data
 outcome = read.csv("refs/FORECAST_outcome_data_v2.csv", stringsAsFactors = F)
@@ -158,7 +158,7 @@ p = ggsurvplot(fit,
 ggsave(plot = print(p), "results/9_outcome_analysis/Spearman_tert_GM_median_survival.png", width = 4, height = 4)
 
 # Read in the geometric mean
-collected$Geometric_Mean = sqrt(collected$Spearman*collected$Gleason_Morisita)
+collected$Geometric_Mean = scaleQuant(sqrt(collected$Spearman*collected$Gleason_Morisita))
 
 # Make categorical
 collected$High_spearman = collected$Spearman > quantile(collected$Spearman, probs = 2/3)
