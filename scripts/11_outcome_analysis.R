@@ -115,7 +115,6 @@ if(output_report) {
 if(thresh_mode=="median") {
   
   collected$High_mPGA             = collected$mPGA > median(collected$mPGA)
-  collected$High_sdPGA            = collected$sdPGA > median(collected$sdPGA)
   collected$High_max_PGA          = collected$max_PGA > median(collected$max_PGA)
   collected$High_subclonal_events = collected$Number_subclonal_events > median(collected$Number_subclonal_events)
   collected$High_SpearGMGM        = collected$SpearGMGM > median(collected$SpearGMGM)
@@ -125,7 +124,6 @@ if(thresh_mode=="median") {
 if(thresh_mode=="tertile") {
   
   collected$High_mPGA             = tertile_split(collected$mPGA)
-  collected$High_sdPGA            = tertile_split(collected$sdPGA)
   collected$High_max_PGA          = tertile_split(collected$max_PGA)
   collected$High_subclonal_events = tertile_split(collected$Number_subclonal_events)
   collected$High_SpearGMGM        = tertile_split(collected$SpearGMGM)
@@ -135,7 +133,6 @@ if(thresh_mode=="tertile") {
 if(thresh_mode=="upper_tert") {
   
   collected$High_mPGA             = collected$mPGA > quantile(collected$mPGA, probs = 2/3)
-  collected$High_sdPGA            = collected$sdPGA > quantile(collected$sdPGA, probs = 2/3)
   collected$High_max_PGA          = collected$max_PGA > quantile(collected$max_PGA, probs = 2/3)
   collected$High_subclonal_events = collected$Number_subclonal_events > quantile(collected$Number_subclonal_events, probs = 2/3)
   collected$High_SpearGMGM        = collected$SpearGMGM > quantile(collected$SpearGMGM, probs = 2/3)
@@ -146,19 +143,6 @@ if(thresh_mode=="upper_tert") {
 fit = survfit(as.formula(paste0("Surv(",out_tim,", ",out_var,") ~ High_mPGA")), data = collected)
 
 # Plot mean PGA result
-ggsurvplot(fit,
-           pval = TRUE, conf.int = TRUE,
-           risk.table = TRUE, # Add risk table
-           risk.table.col = "strata", # Change risk table color by groups
-           linetype = "strata", # Change line type by groups
-           surv.median.line = "hv", # Specify median survival
-           ggtheme = theme_bw(), # Change ggplot2 theme
-           palette = group_palette)
-
-# Calculate fit for sd PGA
-fit = survfit(as.formula(paste0("Surv(",out_tim,", ",out_var,") ~ High_sdPGA")), data = collected)
-
-# Plot sd PGA result
 ggsurvplot(fit,
            pval = TRUE, conf.int = TRUE,
            risk.table = TRUE, # Add risk table
@@ -516,6 +500,45 @@ ggsurvplot(fit,
            ggtheme = theme_bw(), # Change ggplot2 theme
            palette = group_palette)
 
+################################################################################################################
+
+# Read in the heatmap data 
+driver = read.csv("results/mutation_calling/Per_patient_mutation_status_heatmap_data.csv", 
+                  stringsAsFactors = F, row.names = "X")
+
+# Find the hits
+driver_number = apply(driver, 2, function(i) length(i[na.omit(i)!=0]))
+
+# Summarise as a dataframe
+driver_number = data.frame(Patient = names(driver_number), 
+                           Number_Panel_Mutations = driver_number)
+
+# Format nicely
+rownames(driver_number) = NULL
+
+# Add to the collected object
+collected = merge(collected, driver_number, by = "Patient")
+
+# Remove those that are NA
+collected$Number_Panel_Mutations[is.na(collected$ATM)] = NA
+
+# The best separation
+collected$High_panel_number = collected$Number_Panel_Mutations > 1
+
+# Make the fit
+fit = survfit(as.formula(paste0("Surv(",out_tim,", ",out_var,") ~ High_panel_number")), 
+              data = collected)
+
+# Plot that result out 
+ggsurvplot(fit,
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE, # Add risk table
+           risk.table.col = "strata", # Change risk table color by groups
+           linetype = "strata", # Change line type by groups
+           surv.median.line = "hv", # Specify median survival
+           ggtheme = theme_bw(), # Change ggplot2 theme
+           palette = group_palette)
+
 if(output_report) {dev.off()}
 
 #################################################################################################################
@@ -526,13 +549,13 @@ if(output_report) {dev.off()}
 collected$Ploidy = collected$Ploidy / 2
 
 # Transform some variables
-collected$mPGA                    = log(collected$mPGA)
-collected$sdPGA                   = log(collected$sdPGA)
-collected$max_PGA                 = log(collected$max_PGA)
-collected$Subclonality            = exp(collected$Subclonality)
-collected$Lossness                = log(collected$Lossness)
-collected$Number_subclonal_events = log(collected$Number_subclonal_events)
-collected$Total_Events            = log(collected$Total_Events)
+collected$mPGA                    = scaleQuant(log(collected$mPGA))
+collected$max_PGA                 = scaleQuant(log(collected$max_PGA))
+collected$Subclonality            = scaleQuant(exp(collected$Subclonality))
+collected$Lossness                = scaleQuant(log(collected$Lossness))
+collected$Number_subclonal_events = scaleQuant(log(collected$Number_subclonal_events))
+collected$Total_Events            = scaleQuant(log(collected$Total_Events))
+collected$Spearman                = scaleQuant(collected$Spearman)
 
 # Bug fix
 if(spearman_choice=="Spearman") {
@@ -547,7 +570,7 @@ collected$ATM_category        = factor(collected$ATM_category,
                                        levels = c("Wild-type", "Subclonal", "Clonal"))
 
 # What do we want to investigate?
-covariates = c("Samples", "High_PSA", "Gleason_grade_group", "Is_T3", "N_stage", "mPGA", "sdPGA", "max_PGA", "L2RSS", 
+covariates = c("Samples", "High_PSA", "Gleason_grade_group", "Is_T3", "N_stage", "mPGA", "max_PGA",
                "Lossness", "Total_Events", "Subclonality", "Number_subclonal_events", 
                "Subclonal_Mut_Status", "Ploidy", "DNA_damage_mutation", "key_amp", "MYCN_MDM2", "MYC_FGFR1", spearman_choice)
 
@@ -596,7 +619,6 @@ ggsave(paste0("results/9_outcome_analysis/",out_var,
 # What do we want to investigate?
 covariates = c("Samples", "High_PSA", "Gleason_grade_group", "Is_T3", "N_stage", 
                "High_mPGA", 
-               "High_sdPGA",
                "High_max_PGA", 
                "High_subclonal_events", 
                "High_Tot_Events", 
