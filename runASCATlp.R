@@ -2,7 +2,10 @@
 runASCATlp = function(lrrs, fix_ploidy = 2, interval = 0.01, 
                       min_purity = 0.2, max_purity = 1, 
                       max_lrr = Inf, no_fit_psit = 2,
-                      pad_ploidy = 0) {
+                      pad_ploidy = 0,
+                      preset = F,
+                      preset_purity,
+                      preset_ploidy) {
   
   # This function calculates the distance measure inspired by the ASCAT LogR equation
   # See https://doi.org/10.1073/pnas.1009843107 for the equation
@@ -36,14 +39,16 @@ runASCATlp = function(lrrs, fix_ploidy = 2, interval = 0.01,
     return(fit)
     
   }
+  gamma  = 1
   
   # Do we want to remove very high lrrs?
   lrrs_for_fit = lrrs[lrrs < max_lrr]
   
+  if(!preset) {
+  
   # The range of purities and ploidies we want to search
   rhos   = seq(min_purity, max_purity+interval, by = interval)
   psits  = seq(fix_ploidy - pad_ploidy, fix_ploidy + pad_ploidy, by = interval)
-  gamma  = 1
   
   # Run across them all and test their fit
   fits = lapply(rhos, function(r) {
@@ -169,6 +174,14 @@ runASCATlp = function(lrrs, fix_ploidy = 2, interval = 0.01,
     
     best_fit = data.frame(psit = no_fit_psit, purity = 1, dist = Inf)
     
+  }
+  
+  }
+  
+  if(preset) {
+    best_fit = data.frame(psit = preset_ploidy, purity = preset_purity, dist = NA)
+    fit_mat  = NULL
+    lms      = NULL
   }
   
   # Get continuous copy number values for best fit
