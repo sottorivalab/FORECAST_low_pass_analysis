@@ -133,9 +133,9 @@ log2ratio_comparison = function(segs_col_a, segs_col_b, exp_distance = 1848.691,
 }
 
 # List files in the FORECAST structure
-FORECAST_list.files = function(p, pattern, sub_dir = "/QDNASEQ") {
+FORECAST_list.files = function(p, pattern, sub_dir = "/QDNASEQ", mount) {
   
-  files = list.files(paste0(davros_mount,"data/",p,sub_dir), 
+  files = list.files(paste0(mount,"/data/",p,sub_dir), 
                      recursive = T, pattern = pattern, full.names = T)
   
   return(files)
